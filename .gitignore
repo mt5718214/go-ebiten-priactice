@@ -1,0 +1,4 @@
+space-shooter-extension/*
+!space-shooter-extension/PNG
+
+.DS_Store
