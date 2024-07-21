@@ -1,4 +1,4 @@
-# A simple 2D airplane game
+# A simple 2D game practise
 
 ## Free assets from [Kenney](https://kenney.nl/assets)
 
