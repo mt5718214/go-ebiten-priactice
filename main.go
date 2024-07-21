@@ -3,7 +3,6 @@ package main
 import (
 	"image"
 	_ "image/png"
-	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/colorm"
@@ -11,7 +10,14 @@ import (
 	"embed"
 )
 
-type Game struct {}
+type Vector struct {
+	X float64
+	Y float64
+}
+
+type Game struct {
+	playerPosition Vector
+}
 
 func (g *Game) Update() error {
 	return nil
@@ -24,13 +30,14 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// op.GeoM.Translate(100, 100)
 	// op.GeoM.Scale(-1, 1)
 	// op.GeoM.Scale(5, 5)
-	width := PlayerImage.Bounds().Dx()
-	height := PlayerImage.Bounds().Dy()
-	halw := float64(width / 2)
-	halh := float64(height / 2)
-	op.GeoM.Translate(-halw, -halh)
-	op.GeoM.Rotate(45.0 * math.Pi / 180.0)
-	op.GeoM.Translate(halw, halh)
+	// width := PlayerImage.Bounds().Dx()
+	// height := PlayerImage.Bounds().Dy()
+	// halw := float64(width / 2)
+	// halh := float64(height / 2)
+	// op.GeoM.Translate(-halw, -halh)
+	// op.GeoM.Rotate(45.0 * math.Pi / 180.0)
+	// op.GeoM.Translate(halw, halh)
+	op.GeoM.Translate(g.playerPosition.X, g.playerPosition.Y)
 	screen.DrawImage(PlayerImage, op)
 
 	// 可以同時Draw多張圖片
@@ -57,7 +64,7 @@ var assets embed.FS
 var PlayerImage = mustLoadImage("space-shooter-extension/PNG/Sprites_X2/Ships/spaceShips_005.png")
 
 func main() {
-	g := &Game{}
+	g := &Game{playerPosition: Vector{X: 100, Y: 100}}
 
 	// RunGame starts the main loop and runs the game.
 	// game's Update function is called every tick to update the game logic.
