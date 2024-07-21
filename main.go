@@ -3,8 +3,10 @@ package main
 import (
 	"image"
 	_ "image/png"
+	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/colorm"
 
 	"embed"
 )
@@ -16,7 +18,33 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	screen.DrawImage(PlayerImage, nil)
+	op := &ebiten.DrawImageOptions{}
+	// op.GeoM.Translate(200, 100) moves the image 200 pixels right and 100 pixels down.
+	// op.GeoM.Rotate(45.0 * math.Pi / 180.0) rotates the image 45° clockwise. use the degrees * math.Pi / 180.0 formula
+	// op.GeoM.Translate(100, 100)
+	// op.GeoM.Scale(-1, 1)
+	// op.GeoM.Scale(5, 5)
+	width := PlayerImage.Bounds().Dx()
+	height := PlayerImage.Bounds().Dy()
+	halw := float64(width / 2)
+	halh := float64(height / 2)
+	op.GeoM.Translate(-halw, -halh)
+	op.GeoM.Rotate(45.0 * math.Pi / 180.0)
+	op.GeoM.Translate(halw, halh)
+	screen.DrawImage(PlayerImage, op)
+
+	// 可以同時Draw多張圖片
+	op1 := &colorm.DrawImageOptions{}
+	cm := colorm.ColorM{}
+	// 該函式有四個參數, 前三個分別代表r g b 三原色(數值範圍為0~1 = 0~100%), 最後一個參數是背景透明度
+	cm.Translate(0, 0, 0.6, 0.0)
+	colorm.DrawImage(screen, PlayerImage, cm, op1)
+
+	// op1.GeoM.Translate(200, 200)
+	// op1.GeoM.Scale(0.6, 0.6)
+	// cm.Translate(1.0, 1.0, 1.0, 1.0)
+	// colorm.DrawImage(screen, PlayerImage, cm, op1)
+	
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
