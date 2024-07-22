@@ -20,6 +20,29 @@ type Game struct {
 }
 
 func (g *Game) Update() error {
+	// speed 是每一tick（one update call）會移動的距離
+	// 預設下每秒會有60tick, 所以一秒會移動300像素
+	// speed := 5.0
+
+	// Move 300 pixels per second
+	// speed := float64(300 / ebiten.TPS())
+
+	speed := 5.0
+
+	// IsKeyPressed return true if the given key is pressed in the current tick
+	if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
+		g.playerPosition.Y += speed
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
+		g.playerPosition.Y -= speed
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
+		g.playerPosition.X += speed
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
+		g.playerPosition.X -= speed
+	}
+
 	return nil
 }
 
