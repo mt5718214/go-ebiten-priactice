@@ -7,6 +7,8 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/colorm"
 
+	// "github.com/hajimehoshi/ebiten/v2/ebitenutil"
+
 	"embed"
 )
 
@@ -74,7 +76,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// op1.GeoM.Scale(0.6, 0.6)
 	// cm.Translate(1.0, 1.0, 1.0, 1.0)
 	// colorm.DrawImage(screen, PlayerImage, cm, op1)
-	
+
+	// ActualTPS returns the current TPS (ticks per second),
+	// that represents how many Update function is called in a second.
+	// ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS: %0.2f", ebiten.ActualTPS()))
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
