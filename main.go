@@ -3,6 +3,7 @@ package main
 import (
 	"image"
 	_ "image/png"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/colorm"
@@ -17,11 +18,54 @@ type Vector struct {
 	Y float64
 }
 
+type Color struct {
+	R float64 
+	G float64
+	B float64
+	A float64
+}
+
+type Timer struct {
+	currentTicks int
+	targetTicks int
+}
+
+func NewTimer(d time.Duration) *Timer {
+	return &Timer{
+		currentTicks: 0,
+		targetTicks: int(d.Milliseconds()) * ebiten.TPS() / 1000,
+	}
+}
+
+func (t *Timer) Update() {
+	if t.currentTicks < t.targetTicks {
+		t.currentTicks++
+	}
+}
+
+func (t *Timer) IsReady() bool {
+	return t.currentTicks >= t.targetTicks
+}
+
+func (t *Timer) Reset() {
+	t.currentTicks = 0
+}
+
 type Game struct {
 	playerPosition Vector
+	ChangeColorTimer *Timer
+	Color Color
 }
 
 func (g *Game) Update() error {
+	g.ChangeColorTimer.Update()
+	if g.ChangeColorTimer.IsReady() {
+		g.ChangeColorTimer.Reset()
+
+		// change the color
+		print("change the color")
+		g.Color.B += 0.01
+	}
 	// speed 是每一tick（one update call）會移動的距離
 	// 預設下每秒會有60tick, 所以一秒會移動300像素
 	// speed := 5.0
@@ -49,7 +93,7 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	op := &ebiten.DrawImageOptions{}
+	// op := &ebiten.DrawImageOptions{}
 	// op.GeoM.Translate(200, 100) moves the image 200 pixels right and 100 pixels down.
 	// op.GeoM.Rotate(45.0 * math.Pi / 180.0) rotates the image 45° clockwise. use the degrees * math.Pi / 180.0 formula
 	// op.GeoM.Translate(100, 100)
@@ -62,14 +106,15 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// op.GeoM.Translate(-halw, -halh)
 	// op.GeoM.Rotate(45.0 * math.Pi / 180.0)
 	// op.GeoM.Translate(halw, halh)
-	op.GeoM.Translate(g.playerPosition.X, g.playerPosition.Y)
-	screen.DrawImage(PlayerImage, op)
+	// op.GeoM.Translate(g.playerPosition.X, g.playerPosition.Y)
+	// screen.DrawImage(PlayerImage, op)
 
 	// 可以同時Draw多張圖片
 	op1 := &colorm.DrawImageOptions{}
 	cm := colorm.ColorM{}
+	op1.GeoM.Translate(g.playerPosition.X, g.playerPosition.Y)
 	// 該函式有四個參數, 前三個分別代表r g b 三原色(數值範圍為0~1 = 0~100%), 最後一個參數是背景透明度
-	cm.Translate(0, 0, 0.6, 0.0)
+	cm.Translate(g.Color.R, g.Color.G, g.Color.B, g.Color.A)
 	colorm.DrawImage(screen, PlayerImage, cm, op1)
 
 	// op1.GeoM.Translate(200, 200)
@@ -92,7 +137,7 @@ var assets embed.FS
 var PlayerImage = mustLoadImage("space-shooter-extension/PNG/Sprites_X2/Ships/spaceShips_005.png")
 
 func main() {
-	g := &Game{playerPosition: Vector{X: 100, Y: 100}}
+	g := &Game{playerPosition: Vector{X: 100, Y: 100}, ChangeColorTimer: NewTimer(5 * time.Second)}
 
 	// RunGame starts the main loop and runs the game.
 	// game's Update function is called every tick to update the game logic.
