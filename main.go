@@ -51,10 +51,36 @@ func (t *Timer) Reset() {
 	t.currentTicks = 0
 }
 
+type Player struct {
+	position Vector
+	sprite *ebiten.Image
+	color Color
+}
+
+func NewPlayer() *Player {
+	return &Player{
+		position: Vector{X: 100, Y: 100},
+		sprite: PlayerImage,
+	}
+}
+
+func (p *Player) Update() error {
+	return nil
+}
+
+func (p *Player) Draw(screen *ebiten.Image) {
+	op1 := &colorm.DrawImageOptions{}
+	cm := colorm.ColorM{}
+	op1.GeoM.Translate(p.position.X, p.position.Y)
+	cm.Translate(p.color.R, p.color.G, p.color.B, p.color.A)
+	colorm.DrawImage(screen, PlayerImage, cm, op1)
+}
+
 type Game struct {
 	playerPosition Vector
 	ChangeColorTimer *Timer
 	Color Color
+	player *Player
 }
 
 func (g *Game) Update() error {
@@ -66,6 +92,9 @@ func (g *Game) Update() error {
 		print("change the color")
 		g.Color.B += 0.01
 	}
+
+	g.player.Update()
+
 	// speed 是每一tick（one update call）會移動的距離
 	// 預設下每秒會有60tick, 所以一秒會移動300像素
 	// speed := 5.0
@@ -113,9 +142,13 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	op1 := &colorm.DrawImageOptions{}
 	cm := colorm.ColorM{}
 	op1.GeoM.Translate(g.playerPosition.X, g.playerPosition.Y)
+	op1.GeoM.Scale(0.5, 0.5)
 	// 該函式有四個參數, 前三個分別代表r g b 三原色(數值範圍為0~1 = 0~100%), 最後一個參數是背景透明度
 	cm.Translate(g.Color.R, g.Color.G, g.Color.B, g.Color.A)
 	colorm.DrawImage(screen, PlayerImage, cm, op1)
+
+	// draw player
+	g.player.Draw(screen)
 
 	// op1.GeoM.Translate(200, 200)
 	// op1.GeoM.Scale(0.6, 0.6)
@@ -127,8 +160,13 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS: %0.2f", ebiten.ActualTPS()))
 }
 
-func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return outsideWidth, outsideHeight
+
+const (
+	ScreenWidth  = 800
+	ScreenHeight = 600
+)
+func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
+	return ScreenWidth, ScreenHeight
 }
 
 //關鍵字: go:embed，透過註解就可以直接讀取檔案
