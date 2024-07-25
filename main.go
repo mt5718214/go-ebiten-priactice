@@ -65,6 +65,19 @@ func NewPlayer() *Player {
 }
 
 func (p *Player) Update() error {
+	speed := 5.0
+	if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
+		p.position.Y += speed
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
+		p.position.Y -= speed
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
+		p.position.X += speed
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
+		p.position.X -= speed
+	}
 	return nil
 }
 
@@ -73,7 +86,7 @@ func (p *Player) Draw(screen *ebiten.Image) {
 	cm := colorm.ColorM{}
 	op1.GeoM.Translate(p.position.X, p.position.Y)
 	cm.Translate(p.color.R, p.color.G, p.color.B, p.color.A)
-	colorm.DrawImage(screen, PlayerImage, cm, op1)
+	colorm.DrawImage(screen, p.sprite, cm, op1)
 }
 
 type Game struct {
@@ -102,22 +115,6 @@ func (g *Game) Update() error {
 	// Move 300 pixels per second
 	// speed := float64(300 / ebiten.TPS())
 
-	speed := 5.0
-
-	// IsKeyPressed return true if the given key is pressed in the current tick
-	if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
-		g.playerPosition.Y += speed
-	}
-	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
-		g.playerPosition.Y -= speed
-	}
-	if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
-		g.playerPosition.X += speed
-	}
-	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
-		g.playerPosition.X -= speed
-	}
-
 	return nil
 }
 
@@ -139,13 +136,13 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// screen.DrawImage(PlayerImage, op)
 
 	// 可以同時Draw多張圖片
-	op1 := &colorm.DrawImageOptions{}
-	cm := colorm.ColorM{}
-	op1.GeoM.Translate(g.playerPosition.X, g.playerPosition.Y)
-	op1.GeoM.Scale(0.5, 0.5)
+	// op1 := &colorm.DrawImageOptions{}
+	// cm := colorm.ColorM{}
+	// op1.GeoM.Translate(g.playerPosition.X, g.playerPosition.Y)
+	// op1.GeoM.Scale(0.5, 0.5)
 	// 該函式有四個參數, 前三個分別代表r g b 三原色(數值範圍為0~1 = 0~100%), 最後一個參數是背景透明度
-	cm.Translate(g.Color.R, g.Color.G, g.Color.B, g.Color.A)
-	colorm.DrawImage(screen, PlayerImage, cm, op1)
+	// cm.Translate(g.Color.R, g.Color.G, g.Color.B, g.Color.A)
+	// colorm.DrawImage(screen, PlayerImage, cm, op1)
 
 	// draw player
 	g.player.Draw(screen)
@@ -162,8 +159,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 
 const (
-	ScreenWidth  = 800
-	ScreenHeight = 600
+	ScreenWidth  = 1600
+	ScreenHeight = 1200
 )
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return ScreenWidth, ScreenHeight
@@ -175,7 +172,7 @@ var assets embed.FS
 var PlayerImage = mustLoadImage("space-shooter-extension/PNG/Sprites_X2/Ships/spaceShips_005.png")
 
 func main() {
-	g := &Game{playerPosition: Vector{X: 100, Y: 100}, ChangeColorTimer: NewTimer(5 * time.Second)}
+	g := &Game{playerPosition: Vector{X: 100, Y: 100}, ChangeColorTimer: NewTimer(5 * time.Second), player: NewPlayer()}
 
 	// RunGame starts the main loop and runs the game.
 	// game's Update function is called every tick to update the game logic.
