@@ -58,8 +58,19 @@ type Player struct {
 }
 
 func NewPlayer() *Player {
+	sprite := PlayerImage
+
+	// 初始化player的位置在畫面的中心
+	// 假設sprite的寬度是2x, 畫面寬度是4y, 中心的位置會是2y, 要讓sprite的中心在畫面中心的話會是2y (screenWidth/2) - x (x = sprite的寬度/2) 
+	bounds := sprite.Bounds()
+	halW := float64(bounds.Dx()) / 2
+	halH := float64(bounds.Dy()) / 2
+	pos := Vector{
+		X: ScreenWidth/2 - halW,
+		Y: ScreenHeight/2 - halH,
+	}
 	return &Player{
-		position: Vector{X: 100, Y: 100},
+		position: pos,
 		sprite: PlayerImage,
 	}
 }
