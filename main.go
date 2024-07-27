@@ -3,6 +3,7 @@ package main
 import (
 	"image"
 	_ "image/png"
+	"math"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -54,6 +55,7 @@ func (t *Timer) Reset() {
 type Player struct {
 	position Vector
 	sprite *ebiten.Image
+	rotation float64
 	color Color
 }
 
@@ -76,25 +78,31 @@ func NewPlayer() *Player {
 }
 
 func (p *Player) Update() error {
-	speed := 5.0
-	if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
-		p.position.Y += speed
-	}
-	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
-		p.position.Y -= speed
-	}
+	speed := math.Pi / float64(ebiten.TPS())
+
 	if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
-		p.position.X += speed
+		p.rotation += speed
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
-		p.position.X -= speed
+		p.rotation -= speed
 	}
 	return nil
 }
 
 func (p *Player) Draw(screen *ebiten.Image) {
+	// 取得sprite的中心位置資訊
+	bounds := p.sprite.Bounds()
+	halfW := float64(bounds.Dx()) / 2
+	halfH := float64(bounds.Dy()) / 2
+
 	op1 := &colorm.DrawImageOptions{}
 	cm := colorm.ColorM{}
+	// 將sprite先移動到pivot point的位置後在旋轉sprite, 之後再將sprite移回原位
+	op1.GeoM.Translate(-halfW, -halfH)
+	op1.GeoM.Rotate(p.rotation)
+	op1.GeoM.Translate(halfW, halfH)
+
+	// 將sprite平移動到screen中心的位置
 	op1.GeoM.Translate(p.position.X, p.position.Y)
 	cm.Translate(p.color.R, p.color.G, p.color.B, p.color.A)
 	colorm.DrawImage(screen, p.sprite, cm, op1)
