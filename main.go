@@ -4,6 +4,8 @@ import (
 	"image"
 	_ "image/png"
 	"math"
+	"math/rand"
+	"strings"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -108,11 +110,35 @@ func (p *Player) Draw(screen *ebiten.Image) {
 	colorm.DrawImage(screen, p.sprite, cm, op1)
 }
 
+type Meteor struct {
+	position Vector
+	sprite *ebiten.Image
+}
+
+func NewMeteor() *Meteor {
+	sprite := MeteorSprites[rand.Intn(len(MeteorSprites))]
+
+	return &Meteor{
+		position: Vector{},
+		sprite: sprite,
+	}
+}
+
+func (m *Meteor) Update() error {
+	return nil
+}
+
+func (m *Meteor) Draw(screen *ebiten.Image) {
+	
+}
+
 type Game struct {
 	playerPosition Vector
 	ChangeColorTimer *Timer
 	Color Color
 	player *Player
+	meteorSpawnTimer *Timer
+	meteors []*Meteor
 }
 
 func (g *Game) Update() error {
@@ -126,6 +152,21 @@ func (g *Game) Update() error {
 	}
 
 	g.player.Update()
+
+	g.meteorSpawnTimer.Update()
+	if g.meteorSpawnTimer.IsReady() {
+		g.meteorSpawnTimer.Reset()
+
+		// spawn a meteor
+		meteor := NewMeteor()
+		g.meteors = append(g.meteors, meteor)
+	}
+
+	for _, m := range g.meteors {
+		m.Update()
+	}
+	print("===", len(g.meteors))
+	
 
 	// speed 是每一tick（one update call）會移動的距離
 	// 預設下每秒會有60tick, 所以一秒會移動300像素
@@ -166,6 +207,11 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// draw player
 	g.player.Draw(screen)
 
+	// draw meteor
+	for _, m := range g.meteors {
+		m.Draw(screen)
+	}
+
 	// op1.GeoM.Translate(200, 200)
 	// op1.GeoM.Scale(0.6, 0.6)
 	// cm.Translate(1.0, 1.0, 1.0, 1.0)
@@ -189,9 +235,10 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 //go:embed space-shooter-extension/PNG/*
 var assets embed.FS
 var PlayerImage = mustLoadImage("space-shooter-extension/PNG/Sprites_X2/Ships/spaceShips_005.png")
+var MeteorSprites = mustLoadImages("space-shooter-extension/PNG/Sprites_X2/Meteors")
 
 func main() {
-	g := &Game{playerPosition: Vector{X: 100, Y: 100}, ChangeColorTimer: NewTimer(5 * time.Second), player: NewPlayer()}
+	g := &Game{playerPosition: Vector{X: 100, Y: 100}, ChangeColorTimer: NewTimer(5 * time.Second), player: NewPlayer(), meteorSpawnTimer: NewTimer(1 * time.Second), meteors: []*Meteor{}}
 
 	// RunGame starts the main loop and runs the game.
 	// game's Update function is called every tick to update the game logic.
@@ -217,4 +264,33 @@ func mustLoadImage(name string) *ebiten.Image {
 	}
 
 	return ebiten.NewImageFromImage(img)
+}
+
+func mustLoadImages(name string) ([]*ebiten.Image) {
+	var images []*ebiten.Image
+
+	// 讀取整個資料夾
+	entries, err := assets.ReadDir(name)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, entry := range entries {
+		// 如果不是directory，並且檔案須為.png則讀取檔案
+		if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".png") {
+			file, err := assets.Open(name + "/" + entry.Name())
+			if err != nil {
+				panic(err)
+			}
+
+			img, _, err := image.Decode(file)
+			if err != nil {
+				panic(err)
+			}
+
+			images = append(images, ebiten.NewImageFromImage(img))
+		}
+	}
+
+	return images
 }
