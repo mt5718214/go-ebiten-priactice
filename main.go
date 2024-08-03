@@ -21,6 +21,18 @@ type Vector struct {
 	Y float64
 }
 
+func (v *Vector) Normalize() Vector {
+	// 計算向量長度
+	length := math.Sqrt(v.X*v.X + v.Y*v.Y)
+	if length == 0 {
+		return Vector{0, 0} // Avoid division by zero
+	}
+	return Vector{
+		X: v.X / length,
+		Y: v.Y / length,
+	}
+}
+
 type Color struct {
 	R float64 
 	G float64
@@ -113,23 +125,73 @@ func (p *Player) Draw(screen *ebiten.Image) {
 type Meteor struct {
 	position Vector
 	sprite *ebiten.Image
+	movement Vector
+	rotation float64
+	rotationSpeed float64
 }
 
 func NewMeteor() *Meteor {
 	sprite := MeteorSprites[rand.Intn(len(MeteorSprites))]
 
+	// 取得screen的中心位置資訊
+	target := Vector{
+		X: ScreenWidth / 2,
+		Y: ScreenHeight / 2,
+	}
+	// 產生meteor時距中心的距離
+	r := ScreenWidth / 2.0
+	// 隨機一個角度 （2π is 360°）
+	angle := rand.Float64() * 2 * math.Pi
+	pos := Vector{
+		X: target.X + r*math.Cos(angle), // r*math.Cos(angle) = 以某個點為中心且半徑為r, 從正x軸開始移動angle角度的點(0度逆時針旋轉)
+		Y: target.Y + r*math.Sin(angle),
+	}
+	
+	// 隨機速度
+	velocity := 0.25 + rand.Float64() * 1.5
+
+	// 方向 = 目標位置 - 現在位置
+	direction := Vector{
+		X: target.X - pos.X,
+		Y: target.Y - pos.Y,
+	}
+	// 標準化向量 - 只取得方向不取得長度
+	normalizedDirection := direction.Normalize()
+
+	// 將方向乘以速度
+	movement := Vector{
+		X: normalizedDirection.X * velocity,
+		Y: normalizedDirection.Y * velocity,
+	}
+
 	return &Meteor{
-		position: Vector{},
+		position: pos,
 		sprite: sprite,
+		movement: movement,
+		rotation: 0,
+		rotationSpeed: -0.02 + rand.Float64() * 0.04,
 	}
 }
 
 func (m *Meteor) Update() error {
+	m.position.X += m.movement.X
+	m.position.Y += m.movement.Y
+	m.rotation += m.rotationSpeed
 	return nil
 }
 
 func (m *Meteor) Draw(screen *ebiten.Image) {
-	
+	bounds := m.sprite.Bounds()
+	halfW := float64(bounds.Dx()) / 2
+	halfH := float64(bounds.Dy()) / 2
+
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Translate(-halfW, -halfH)
+	op.GeoM.Rotate(m.rotation)
+	op.GeoM.Translate(halfW, halfH)
+
+	op.GeoM.Translate(m.position.X, m.position.Y)
+	screen.DrawImage(m.sprite, op)
 }
 
 type Game struct {
@@ -165,7 +227,6 @@ func (g *Game) Update() error {
 	for _, m := range g.meteors {
 		m.Update()
 	}
-	print("===", len(g.meteors))
 	
 
 	// speed 是每一tick（one update call）會移動的距離
@@ -224,8 +285,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 
 const (
-	ScreenWidth  = 1600
-	ScreenHeight = 1200
+	ScreenWidth  = 3200
+	ScreenHeight = 2400
 )
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return ScreenWidth, ScreenHeight
@@ -238,7 +299,7 @@ var PlayerImage = mustLoadImage("space-shooter-extension/PNG/Sprites_X2/Ships/sp
 var MeteorSprites = mustLoadImages("space-shooter-extension/PNG/Sprites_X2/Meteors")
 
 func main() {
-	g := &Game{playerPosition: Vector{X: 100, Y: 100}, ChangeColorTimer: NewTimer(5 * time.Second), player: NewPlayer(), meteorSpawnTimer: NewTimer(1 * time.Second), meteors: []*Meteor{}}
+	g := &Game{playerPosition: Vector{X: 100, Y: 100}, ChangeColorTimer: NewTimer(5 * time.Second), player: NewPlayer(), meteorSpawnTimer: NewTimer(5 * time.Second), meteors: []*Meteor{}}
 
 	// RunGame starts the main loop and runs the game.
 	// game's Update function is called every tick to update the game logic.
