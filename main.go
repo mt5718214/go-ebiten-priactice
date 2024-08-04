@@ -71,6 +71,8 @@ type Player struct {
 	sprite *ebiten.Image
 	rotation float64
 	color Color
+	// 射子彈的CD時間
+	shootCooldown *Timer
 }
 
 func NewPlayer() *Player {
@@ -88,6 +90,7 @@ func NewPlayer() *Player {
 	return &Player{
 		position: pos,
 		sprite: PlayerImage,
+		shootCooldown: NewTimer(1 * time.Second),
 	}
 }
 
@@ -99,6 +102,12 @@ func (p *Player) Update() error {
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
 		p.rotation -= speed
+	}
+
+	p.shootCooldown.Update()
+	if ebiten.IsKeyPressed(ebiten.KeySpace) && p.shootCooldown.IsReady() {
+		p.shootCooldown.Reset()
+		// shoot the bullet
 	}
 	return nil
 }
