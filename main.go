@@ -67,6 +67,8 @@ func (t *Timer) Reset() {
 }
 
 type Player struct {
+	game *Game
+
 	position Vector
 	sprite *ebiten.Image
 	rotation float64
@@ -75,7 +77,7 @@ type Player struct {
 	shootCooldown *Timer
 }
 
-func NewPlayer() *Player {
+func NewPlayer(g *Game) *Player {
 	sprite := PlayerImage
 
 	// 初始化player的位置在畫面的中心
@@ -88,6 +90,7 @@ func NewPlayer() *Player {
 		Y: ScreenHeight/2 - halH,
 	}
 	return &Player{
+		game: g,
 		position: pos,
 		sprite: PlayerImage,
 		shootCooldown: NewTimer(1 * time.Second),
@@ -107,7 +110,20 @@ func (p *Player) Update() error {
 	p.shootCooldown.Update()
 	if ebiten.IsKeyPressed(ebiten.KeySpace) && p.shootCooldown.IsReady() {
 		p.shootCooldown.Reset()
+
 		// shoot the bullet
+		bulletSpawnOffset := 50.0
+		bounds := p.sprite.Bounds()
+		halfW := float64(bounds.Dx()) / 2
+		halfH := float64(bounds.Dy()) / 2
+
+		spawnPos := Vector{
+			p.position.X + halfW + math.Sin(p.rotation)*bulletSpawnOffset,
+	    p.position.Y + halfH + math.Cos(p.rotation)*-bulletSpawnOffset,
+		}
+
+		bullet := NewBullet(spawnPos, p.rotation)
+		p.game.AddBullet(bullet)
 	}
 	return nil
 }
@@ -129,6 +145,49 @@ func (p *Player) Draw(screen *ebiten.Image) {
 	op1.GeoM.Translate(p.position.X, p.position.Y)
 	cm.Translate(p.color.R, p.color.G, p.color.B, p.color.A)
 	colorm.DrawImage(screen, p.sprite, cm, op1)
+}
+
+type Bullet struct {
+	position Vector
+	sprite *ebiten.Image
+	rotation float64
+}
+
+func NewBullet(pos Vector, rotation float64) *Bullet {
+	bounds := bulletImage.Bounds()
+	halfW := float64(bounds.Dx()) / 2
+	halfH := float64(bounds.Dy()) / 2
+
+	pos.X -= halfW
+	pos.Y -= halfH
+
+	return &Bullet{
+		position: pos,
+		sprite: bulletImage,
+		rotation: rotation,
+	}
+}
+
+func (b *Bullet) Update() error {
+	bulletSpeedPerSecond := 350.0
+	speed := bulletSpeedPerSecond / float64(ebiten.TPS())
+	b.position.X += math.Sin(b.rotation) * speed
+	b.position.Y += math.Cos(b.rotation) * -speed
+	// b.position.Y += math.Cos(b.rotation) * speed
+	return nil
+}
+
+func (b *Bullet) Draw(screen *ebiten.Image) {
+	op := &ebiten.DrawImageOptions{}
+
+	bounds := b.sprite.Bounds()
+	halfW := float64(bounds.Dx()) / 2
+	halfH := float64(bounds.Dy()) / 2
+
+	op.GeoM.Translate(-halfW, -halfH)
+	op.GeoM.Rotate(b.rotation)
+	op.GeoM.Translate(b.position.X, b.position.Y)
+	screen.DrawImage(b.sprite, op)
 }
 
 type Meteor struct {
@@ -210,6 +269,13 @@ type Game struct {
 	player *Player
 	meteorSpawnTimer *Timer
 	meteors []*Meteor
+	bullets []*Bullet
+}
+
+func NewGame() *Game {
+	g := &Game{playerPosition: Vector{X: 100, Y: 100}, ChangeColorTimer: NewTimer(5 * time.Second), meteorSpawnTimer: NewTimer(5 * time.Second)}
+	g.player = NewPlayer(g)
+	return g
 }
 
 func (g *Game) Update() error {
@@ -222,8 +288,10 @@ func (g *Game) Update() error {
 		g.Color.B += 0.01
 	}
 
+	// update player
 	g.player.Update()
 
+	// update meteor
 	g.meteorSpawnTimer.Update()
 	if g.meteorSpawnTimer.IsReady() {
 		g.meteorSpawnTimer.Reset()
@@ -235,6 +303,11 @@ func (g *Game) Update() error {
 
 	for _, m := range g.meteors {
 		m.Update()
+	}
+
+	// update bullet
+	for _, b := range g.bullets {
+		b.Update()
 	}
 	
 
@@ -282,6 +355,11 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		m.Draw(screen)
 	}
 
+	// draw bullet
+	for _, b := range g.bullets {
+		b.Draw(screen)
+	}
+
 	// op1.GeoM.Translate(200, 200)
 	// op1.GeoM.Scale(0.6, 0.6)
 	// cm.Translate(1.0, 1.0, 1.0, 1.0)
@@ -301,20 +379,23 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return ScreenWidth, ScreenHeight
 }
 
+func (g *Game) AddBullet(b *Bullet) {
+	g.bullets = append(g.bullets, b)
+}
+
 //關鍵字: go:embed，透過註解就可以直接讀取檔案
 //go:embed space-shooter-extension/PNG/*
 var assets embed.FS
 var PlayerImage = mustLoadImage("space-shooter-extension/PNG/Sprites_X2/Ships/spaceShips_005.png")
 var MeteorSprites = mustLoadImages("space-shooter-extension/PNG/Sprites_X2/Meteors")
+var bulletImage = mustLoadImage("space-shooter-extension/PNG/Sprites_X2/Rocket parts/spaceRocketParts_023.png")
 
 func main() {
-	g := &Game{playerPosition: Vector{X: 100, Y: 100}, ChangeColorTimer: NewTimer(5 * time.Second), player: NewPlayer(), meteorSpawnTimer: NewTimer(5 * time.Second), meteors: []*Meteor{}}
-
 	// RunGame starts the main loop and runs the game.
 	// game's Update function is called every tick to update the game logic.
 	// game's Draw function is called every frame to draw the screen.
 	// game's Layout function is called when necessary, and can specify the logical screen size by the function.
-	err := ebiten.RunGame(g)
+	err := ebiten.RunGame(NewGame())
 	if err != nil {
 		panic(err)
 	}
