@@ -1,4 +1,5 @@
-space-shooter-extension/*
-!space-shooter-extension/PNG
+spaceshooterextension/*
+!spaceshooterextension/PNG
+!spaceshooterextension/assets.go
 
 .DS_Store
