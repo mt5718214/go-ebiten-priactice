@@ -133,3 +133,9 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 func (g *Game) AddBullet(b *Bullet) {
 	g.bullets = append(g.bullets, b)
 }
+
+func (g *Game) Reset() {
+	g.player = NewPlayer(g)
+	g.meteors = nil
+	g.bullets = nil
+}
