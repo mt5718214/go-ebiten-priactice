@@ -95,3 +95,14 @@ func (p *Player) Draw(screen *ebiten.Image) {
 	cm.Translate(p.color.R, p.color.G, p.color.B, p.color.A)
 	colorm.DrawImage(screen, p.sprite, cm, op1)
 }
+
+func (p *Player) Collider() Rect {
+	bounds := p.sprite.Bounds()
+
+	return Rect{
+		X: p.position.X,
+		Y: p.position.Y,
+		W: float64(bounds.Dx()),
+		H: float64(bounds.Dy()),
+	}
+}

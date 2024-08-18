@@ -53,3 +53,14 @@ func (b *Bullet) Draw(screen *ebiten.Image) {
 	op.GeoM.Translate(b.position.X, b.position.Y)
 	screen.DrawImage(b.sprite, op)
 }
+
+func (b *Bullet) Collider() Rect {
+	bounds := b.sprite.Bounds()
+
+	return Rect{
+		X: b.position.X,
+		Y: b.position.Y,
+		W: float64(bounds.Dx()),
+		H: float64(bounds.Dy()),
+	}
+}
