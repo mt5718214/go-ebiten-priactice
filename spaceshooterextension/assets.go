@@ -6,14 +6,17 @@ import (
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"golang.org/x/image/font"
+	"golang.org/x/image/font/opentype"
 )
 
 //關鍵字: go:embed，透過註解就可以直接讀取檔案
-//go:embed PNG/*
+//go:embed *
 var assets embed.FS
 var PlayerImage = mustLoadImage("PNG/Sprites_X2/Ships/spaceShips_005.png")
 var MeteorSprites = mustLoadImages("PNG/Sprites_X2/Meteors")
 var BulletImage = mustLoadImage("PNG/Sprites_X2/Rocket parts/spaceRocketParts_023.png")
+var SorceFont = mustLoadFont("kenneyFonts/Fonts/Kenney High.ttf")
 
 func mustLoadImage(name string) *ebiten.Image {
 	f, err := assets.Open(name)
@@ -58,4 +61,27 @@ func mustLoadImages(name string) ([]*ebiten.Image) {
 	}
 
 	return images
+}
+
+func mustLoadFont(name string) font.Face {
+	f, err := assets.ReadFile(name)
+	if err != nil {
+		panic(err)
+	}
+
+	tt, err := opentype.Parse(f)
+	if err != nil {
+		panic(err)
+	}
+
+	face, err := opentype.NewFace(tt, &opentype.FaceOptions{
+		Size:    240,
+		DPI:     72,
+		Hinting: font.HintingVertical,
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	return face
 }
