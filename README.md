@@ -2,6 +2,8 @@
 
 ## Free assets from [Kenney](https://kenney.nl/assets)
 
+## Free font from [kenney-fonts](https://www.kenney.nl/assets/kenney-fonts)
+
 - [Space Shooter Extension](https://kenney.nl/assets/space-shooter-extension)
 
 ## 計算兩個矩形是否有交集 （要計算是否交集, 需滿足四個條件）
