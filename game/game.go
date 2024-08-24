@@ -59,6 +59,22 @@ func (g *Game) Update() error {
 
 	for _, m := range g.meteors {
 		m.Update()
+
+		// A meteor collided with the player then reset the game
+		if m.Collider().Intersects(g.player.Collider()) {
+			g.Reset()
+		}
+	}
+
+	// check metor and bullet collisions
+	for i, m := range g.meteors {
+		for j, b := range g.bullets {
+			// A bullet collided with a meteor, then remove the bullet and the meteor
+			if m.Collider().Intersects(b.Collider()) {
+				g.meteors = append(g.meteors[:i], g.meteors[i+1:]...)
+				g.bullets = append(g.bullets[:j], g.bullets[j+1:]...)
+			}
+		}
 	}
 
 	// update bullet
