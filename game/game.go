@@ -1,9 +1,14 @@
 package game
 
 import (
+	"fmt"
+	"image/color"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/text"
+
+	assets "airplane/spaceshooterextension"
 )
 
 const (
@@ -26,6 +31,7 @@ type Game struct {
 	meteorSpawnTimer *Timer
 	meteors []*Meteor
 	bullets []*Bullet
+	score int
 }
 
 func NewGame() *Game {
@@ -73,6 +79,8 @@ func (g *Game) Update() error {
 			if m.Collider().Intersects(b.Collider()) {
 				g.meteors = append(g.meteors[:i], g.meteors[i+1:]...)
 				g.bullets = append(g.bullets[:j], g.bullets[j+1:]...)
+
+				g.score++
 			}
 		}
 	}
@@ -132,6 +140,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		b.Draw(screen)
 	}
 
+	text.Draw(screen, fmt.Sprintf("%06d", g.score), assets.SorceFont, ScreenWidth/2-100, 150, color.White)
+
 	// op1.GeoM.Translate(200, 200)
 	// op1.GeoM.Scale(0.6, 0.6)
 	// cm.Translate(1.0, 1.0, 1.0, 1.0)
@@ -154,4 +164,5 @@ func (g *Game) Reset() {
 	g.player = NewPlayer(g)
 	g.meteors = nil
 	g.bullets = nil
+	g.score = 0
 }
