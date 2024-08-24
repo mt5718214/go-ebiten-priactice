@@ -1,5 +1,6 @@
 spaceshooterextension/*
 !spaceshooterextension/PNG
 !spaceshooterextension/assets.go
+!spaceshooterextension/kenneyFonts
 
 .DS_Store
