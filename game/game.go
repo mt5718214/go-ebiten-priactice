@@ -3,6 +3,7 @@ package game
 import (
 	"fmt"
 	"image/color"
+	"math/rand"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -58,8 +59,10 @@ func (g *Game) Update() error {
 	if g.meteorSpawnTimer.IsReady() {
 		g.meteorSpawnTimer.Reset()
 
+		// 隨機速度
+		velocity := 0.25 + (float64(g.score / 10) + 1) * rand.Float64() * 1.5
 		// spawn a meteor
-		meteor := NewMeteor()
+		meteor := NewMeteor(velocity)
 		g.meteors = append(g.meteors, meteor)
 	}
 

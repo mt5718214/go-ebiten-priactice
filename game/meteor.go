@@ -18,7 +18,7 @@ type Meteor struct {
 	rotationSpeed float64
 }
 
-func NewMeteor() *Meteor {
+func NewMeteor(velocity float64) *Meteor {
 	sprite := assets.MeteorSprites[rand.Intn(len(assets.MeteorSprites))]
 
 	// 取得screen的中心位置資訊
@@ -34,9 +34,6 @@ func NewMeteor() *Meteor {
 		X: target.X + r*math.Cos(angle), // r*math.Cos(angle) = 以某個點為中心且半徑為r, 從正x軸開始移動angle角度的點(0度逆時針旋轉)
 		Y: target.Y + r*math.Sin(angle),
 	}
-	
-	// 隨機速度
-	velocity := 0.25 + rand.Float64() * 1.5
 
 	// 方向 = 目標位置 - 現在位置
 	direction := Vector{
