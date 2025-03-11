@@ -8,7 +8,7 @@ permissions:
   pages: write
   id-token: write
 jobs:
-  deploy:
+  build:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -25,6 +25,8 @@ jobs:
           GOARCH: wasm
       - run: cp $(go env GOROOT)/misc/wasm/wasm_exec.js web/
 
+      # https://stackoverflow.com/questions/73937666/configure-github-pages-failed
+      # have to set up Source in the Settings/Pages
       - uses: actions/configure-pages@v2
       - uses: actions/upload-pages-artifact@v3
         with:
